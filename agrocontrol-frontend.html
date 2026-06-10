@@ -1,0 +1,1675 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>AgroControl</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* ══════════════════════════════════════════
+   VARIABLES & RESET
+══════════════════════════════════════════ */
+:root {
+  --green:       #4a7c59;
+  --green-dark:  #2d5a3d;
+  --green-light: #6a9e75;
+  --red:         #c0574a;
+  --red-dark:    #9e3c30;
+  --brown:       #8c7355;
+  --navy:        #1a2234;
+  --bg:          #edeae0;
+  --card:        #ffffff;
+  --text:        #2c2c2a;
+  --muted:       #888780;
+  --border:      #d3d1c7;
+  --input-bg:    #f7f5f0;
+  --shadow:      0 2px 12px rgba(0,0,0,0.08);
+  --radius:      14px;
+  --radius-sm:   10px;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body {
+  height: 100%;
+  font-family: 'Nunito', sans-serif;
+  background: #1a1a1a;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+}
+
+/* ══════════════════════════════════════════
+   PHONE WRAPPER
+══════════════════════════════════════════ */
+#app {
+  width: 100%;
+  max-width: 430px;
+  height: 100vh;
+  max-height: 900px;
+  background: var(--bg);
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 0 60px rgba(0,0,0,0.5);
+}
+@media (max-width: 430px) {
+  body { background: var(--bg); }
+  #app { max-height: 100vh; box-shadow: none; }
+}
+
+/* ══════════════════════════════════════════
+   SCREENS
+══════════════════════════════════════════ */
+.screen {
+  display: none;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+}
+.screen.active { display: flex; }
+
+/* ══════════════════════════════════════════
+   HEADER
+══════════════════════════════════════════ */
+.hdr {
+  flex-shrink: 0;
+  padding: 18px 20px 16px;
+  color: #fff;
+}
+.hdr-green  { background: var(--green); }
+.hdr-red    { background: var(--red); }
+.hdr-navy   { background: var(--navy); }
+.hdr-brown  { background: var(--brown); }
+.hdr h1     { font-size: 20px; font-weight: 700; }
+.hdr p      { font-size: 13px; opacity: .8; margin-top: 2px; }
+.hdr-row    { display: flex; align-items: center; gap: 12px; }
+.back-btn   {
+  background: rgba(255,255,255,.18);
+  border: none; color: #fff; cursor: pointer;
+  width: 34px; height: 34px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px; flex-shrink: 0;
+  transition: background .15s;
+}
+.back-btn:active { background: rgba(255,255,255,.35); }
+.hdr-plus {
+  margin-left: auto;
+  background: rgba(255,255,255,.2);
+  border: none; color: #fff; cursor: pointer;
+  width: 34px; height: 34px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22px; transition: background .15s;
+}
+.hdr-plus:active { background: rgba(255,255,255,.35); }
+.hdr-lock {
+  margin-left: auto;
+  background: none; border: none; color: rgba(255,255,255,.7);
+  cursor: pointer; font-size: 20px;
+}
+
+/* ══════════════════════════════════════════
+   BOTTOM NAV
+══════════════════════════════════════════ */
+.bottom-nav {
+  flex-shrink: 0;
+  display: flex;
+  background: #fff;
+  border-top: 1px solid var(--border);
+  padding-bottom: env(safe-area-inset-bottom, 0);
+}
+.nav-btn {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 10px 4px 9px;
+  border: none;
+  background: none;
+  color: var(--muted);
+  font-size: 10px;
+  font-family: 'Nunito', sans-serif;
+  cursor: pointer;
+  transition: color .15s;
+}
+.nav-btn .ico { font-size: 22px; line-height: 1; }
+.nav-btn.active { color: var(--green); }
+
+/* ══════════════════════════════════════════
+   SCROLLABLE CONTENT
+══════════════════════════════════════════ */
+.scroll { flex: 1; overflow-y: auto; padding: 16px; -webkit-overflow-scrolling: touch; }
+.scroll::-webkit-scrollbar { display: none; }
+
+/* ══════════════════════════════════════════
+   CARDS & SECTIONS
+══════════════════════════════════════════ */
+.section-label {
+  font-size: 15px; font-weight: 700;
+  color: var(--text); margin-bottom: 12px;
+}
+.card {
+  background: var(--card);
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+  margin-bottom: 10px;
+}
+.card-pad { padding: 16px; }
+
+/* ══════════════════════════════════════════
+   QUICK ACTIONS GRID
+══════════════════════════════════════════ */
+.quick-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 22px;
+}
+.quick-card {
+  background: var(--card);
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+  padding: 22px 16px 18px;
+  display: flex; flex-direction: column;
+  align-items: center; gap: 10px;
+  cursor: pointer;
+  transition: transform .12s, box-shadow .12s;
+  -webkit-tap-highlight-color: transparent;
+}
+.quick-card:active { transform: scale(.97); box-shadow: 0 1px 4px rgba(0,0,0,.08); }
+.q-icon {
+  width: 54px; height: 54px; border-radius: 14px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 26px;
+}
+.q-red   { background: #fce8e6; color: var(--red); }
+.q-green { background: #e6f5ea; color: var(--green); }
+.quick-card span { font-size: 13px; font-weight: 600; color: var(--text); text-align: center; }
+
+/* ══════════════════════════════════════════
+   ACCESS LIST ITEMS
+══════════════════════════════════════════ */
+.access-item {
+  display: flex; align-items: center; gap: 14px;
+  padding: 14px 16px;
+  background: var(--card);
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+  cursor: pointer;
+  margin-bottom: 10px;
+  transition: background .12s;
+  -webkit-tap-highlight-color: transparent;
+}
+.access-item:active { background: #f5f3ee; }
+.a-icon {
+  width: 44px; height: 44px; border-radius: 11px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22px; flex-shrink: 0;
+  background: #e6f5ea; color: var(--green);
+}
+.a-info h3 { font-size: 14px; font-weight: 700; color: var(--text); }
+.a-info p  { font-size: 12px; color: var(--muted); margin-top: 1px; }
+.chevron   { margin-left: auto; color: var(--border); font-size: 16px; flex-shrink: 0; }
+.a-stock-low { border-color: #f5c6c1; }
+.a-stock-low .a-icon { background: #fce8e6; color: var(--red); }
+
+/* ══════════════════════════════════════════
+   EMPTY STATE
+══════════════════════════════════════════ */
+.empty {
+  display: flex; flex-direction: column;
+  align-items: center; padding: 44px 20px;
+}
+.empty-ico {
+  width: 64px; height: 64px; border-radius: 50%;
+  background: #e8e5de;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 28px; color: var(--muted); margin-bottom: 14px;
+}
+.empty p   { font-size: 14px; color: var(--muted); margin-bottom: 18px; }
+.btn-empty {
+  padding: 11px 24px; border-radius: 24px;
+  background: var(--green); color: #fff;
+  border: none; font-size: 13px; font-weight: 700;
+  font-family: 'Nunito', sans-serif; cursor: pointer;
+  transition: background .15s;
+}
+.btn-empty:active { background: var(--green-dark); }
+
+/* ══════════════════════════════════════════
+   FORMS
+══════════════════════════════════════════ */
+.field { margin-bottom: 18px; }
+.field label {
+  display: block; font-size: 13px;
+  font-weight: 700; color: var(--text); margin-bottom: 7px;
+}
+.field input, .field select, .field textarea {
+  width: 100%;
+  padding: 13px 14px;
+  background: var(--input-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: 14px; color: var(--text);
+  font-family: 'Nunito', sans-serif;
+  outline: none;
+  transition: border-color .15s, box-shadow .15s;
+  -webkit-appearance: none;
+}
+.field input:focus, .field select:focus, .field textarea:focus {
+  border-color: var(--green);
+  box-shadow: 0 0 0 3px rgba(74,124,89,.12);
+  background: #fff;
+}
+.field textarea { resize: none; height: 84px; }
+.field select { cursor: pointer; }
+
+.total-box {
+  background: var(--input-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 14px;
+  margin-bottom: 18px;
+}
+.total-box small { font-size: 12px; color: var(--muted); display: block; margin-bottom: 2px; }
+.total-box span  { font-size: 26px; font-weight: 700; color: var(--green); }
+
+/* ══════════════════════════════════════════
+   BUTTONS
+══════════════════════════════════════════ */
+.btn-main {
+  width: 100%; padding: 16px;
+  border-radius: var(--radius);
+  border: none; color: #fff;
+  font-size: 15px; font-weight: 700;
+  font-family: 'Nunito', sans-serif;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  transition: opacity .15s, transform .1s;
+  -webkit-tap-highlight-color: transparent;
+}
+.btn-main:active { opacity: .85; transform: scale(.99); }
+.btn-main:disabled { opacity: .55; cursor: not-allowed; transform: none; }
+.btn-green { background: var(--green); }
+.btn-red   { background: var(--red); }
+.btn-navy  { background: var(--navy); }
+
+/* ══════════════════════════════════════════
+   LOGIN SCREEN
+══════════════════════════════════════════ */
+#s-login {
+  background: var(--bg);
+  justify-content: center;
+}
+.login-inner {
+  padding: 40px 32px;
+  display: flex; flex-direction: column; align-items: center;
+}
+.login-logo {
+  width: 88px; height: 88px; border-radius: 50%;
+  background: var(--green);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 40px; color: #fff;
+  margin-bottom: 20px;
+  box-shadow: 0 8px 24px rgba(74,124,89,.35);
+}
+.login-inner h1  { font-size: 26px; font-weight: 700; color: var(--text); }
+.login-inner > p { font-size: 14px; color: var(--muted); margin: 4px 0 28px; }
+.login-field     { width: 100%; margin-bottom: 14px; }
+.login-field label {
+  display: block; font-size: 13px; font-weight: 700;
+  color: var(--text); margin-bottom: 6px;
+}
+.input-wrap      { position: relative; }
+.input-wrap .ico-l {
+  position: absolute; left: 13px; top: 50%;
+  transform: translateY(-50%); font-size: 18px; color: var(--muted);
+}
+.input-wrap input {
+  width: 100%;
+  padding: 14px 14px 14px 42px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: 14px; color: var(--text);
+  font-family: 'Nunito', sans-serif;
+  outline: none;
+  transition: border-color .15s, box-shadow .15s;
+  -webkit-appearance: none;
+}
+.input-wrap input:focus {
+  border-color: var(--green);
+  box-shadow: 0 0 0 3px rgba(74,124,89,.12);
+}
+
+/* ══════════════════════════════════════════
+   REPORTS
+══════════════════════════════════════════ */
+.stat-card {
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  display: flex; align-items: center; gap: 14px;
+  margin-bottom: 10px;
+}
+.stat-red    { background: #fce8e6; }
+.stat-green  { background: #e6f5ea; }
+.stat-blue   { background: #e6eef8; }
+.stat-orange { background: #fef3e6; }
+.s-ico {
+  width: 44px; height: 44px; border-radius: 11px;
+  display: flex; align-items: center; justify-content: center; font-size: 22px;
+  flex-shrink: 0;
+}
+.si-r { background: #f5c4ba; color: var(--red); }
+.si-g { background: #b5d69e; color: #2d5a1e; }
+.si-b { background: #b5ccf0; color: #1a3a7a; }
+.si-o { background: #f5d5a0; color: #8c5a00; }
+.stat-info small  { font-size: 10px; font-weight: 700; letter-spacing: .06em; color: var(--muted); text-transform: uppercase; }
+.stat-info strong { font-size: 22px; font-weight: 700; color: var(--text); display: block; }
+
+.chart-wrap {
+  background: var(--card);
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  padding: 16px;
+  margin-bottom: 10px;
+}
+.chart-title { font-size: 14px; font-weight: 700; color: var(--text); margin-bottom: 16px; }
+.bars { display: flex; align-items: flex-end; gap: 16px; height: 120px; padding: 0 8px; }
+.bar-col  { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.bar-body { width: 40px; border-radius: 6px 6px 0 0; min-height: 4px; transition: height .4s; }
+.bar-lbl  { font-size: 11px; color: var(--muted); font-weight: 600; }
+.chart-legend { display: flex; gap: 16px; justify-content: center; margin-top: 12px; }
+.leg { display: flex; align-items: center; gap: 5px; font-size: 11px; color: var(--muted); font-weight: 600; }
+.leg-dot { width: 10px; height: 10px; border-radius: 50%; }
+.confidential {
+  text-align: center; font-size: 12px; color: var(--muted);
+  background: var(--card); padding: 12px;
+  border-radius: var(--radius); border: 1px solid var(--border);
+}
+
+/* ══════════════════════════════════════════
+   MÁS SCREEN
+══════════════════════════════════════════ */
+.more-item {
+  display: flex; align-items: center; gap: 14px;
+  padding: 16px;
+  background: var(--card);
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+  cursor: pointer;
+  margin-bottom: 10px;
+  transition: background .12s;
+}
+.more-item:active { background: #f5f3ee; }
+.m-ico {
+  width: 42px; height: 42px; border-radius: 11px;
+  display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0;
+}
+.mi-teal { background: #e6f0f0; color: var(--brown); }
+.mi-red  { background: #fce8e6; color: var(--red); }
+.more-item h3 { font-size: 14px; font-weight: 700; color: var(--text); }
+.more-item p  { font-size: 12px; color: var(--muted); margin-top: 1px; }
+.logout-btn {
+  width: 100%;
+  display: flex; align-items: center; gap: 14px;
+  padding: 16px;
+  background: var(--green);
+  border-radius: var(--radius);
+  border: none;
+  cursor: pointer;
+  font-family: 'Nunito', sans-serif;
+  transition: background .12s;
+}
+.logout-btn:active { background: var(--green-dark); }
+.logout-ico {
+  width: 42px; height: 42px; border-radius: 11px;
+  background: rgba(255,255,255,.2);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 20px; color: #fff; flex-shrink: 0;
+}
+.logout-btn h3 { font-size: 14px; font-weight: 700; color: #fff; }
+.logout-btn p  { font-size: 12px; color: rgba(255,255,255,.75); margin-top: 1px; }
+
+/* ══════════════════════════════════════════
+   HISTORIAL
+══════════════════════════════════════════ */
+.hist-item {
+  display: flex; align-items: center; gap: 12px;
+  padding: 13px 16px;
+  background: var(--card);
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  margin-bottom: 8px;
+  box-shadow: var(--shadow);
+}
+.hist-item .h-ico {
+  width: 40px; height: 40px; border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 20px; flex-shrink: 0;
+}
+.h-ico-r { background: #fce8e6; color: var(--red); }
+.h-ico-g { background: #e6f5ea; color: var(--green); }
+.hist-item .h-info h4 { font-size: 13px; font-weight: 700; color: var(--text); }
+.hist-item .h-info p  { font-size: 12px; color: var(--muted); }
+.hist-item .h-monto   { margin-left: auto; font-size: 14px; font-weight: 700; white-space: nowrap; }
+.h-monto.neg { color: var(--red); }
+.h-monto.pos { color: var(--green); }
+.del-btn {
+  background: none; border: none; color: #ddd;
+  cursor: pointer; font-size: 16px; padding: 4px;
+  flex-shrink: 0; transition: color .15s;
+}
+.del-btn:hover { color: var(--red); }
+
+/* ══════════════════════════════════════════
+   TOAST
+══════════════════════════════════════════ */
+#toast {
+  position: absolute; bottom: 90px; left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  background: #2d3a2e; color: #fff;
+  padding: 11px 22px; border-radius: 24px;
+  font-size: 13px; font-weight: 600;
+  white-space: nowrap; opacity: 0;
+  transition: opacity .25s, transform .25s;
+  pointer-events: none; z-index: 999;
+  box-shadow: 0 4px 20px rgba(0,0,0,.3);
+}
+#toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* ══════════════════════════════════════════
+   PRIVACY / REPORTS AUTH
+══════════════════════════════════════════ */
+.priv-center {
+  display: flex; flex-direction: column;
+  align-items: center; padding: 40px 28px 28px;
+}
+.priv-shield {
+  width: 72px; height: 72px; border-radius: 50%;
+  background: #e6f5ea;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 32px; color: var(--green); margin-bottom: 16px;
+}
+.priv-center h2 { font-size: 18px; font-weight: 700; color: var(--text); }
+.priv-center > p {
+  font-size: 13px; color: var(--muted); text-align: center;
+  margin: 6px 0 24px; line-height: 1.55;
+}
+.priv-note {
+  width: 100%; background: #f5f3ee;
+  border-radius: var(--radius-sm); padding: 12px 14px;
+  text-align: center; margin-top: 14px;
+}
+.priv-note p { font-size: 12px; color: var(--muted); line-height: 1.5; }
+
+/* ══════════════════════════════════════════
+   CAMPO CARD
+══════════════════════════════════════════ */
+.campo-card {
+  background: var(--card);
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+  padding: 14px 16px;
+  margin-bottom: 10px;
+  display: flex; align-items: center; gap: 14px;
+  cursor: default;
+}
+.campo-card .badge-cultivo {
+  display: inline-block;
+  background: #e6f5ea; color: var(--green);
+  font-size: 11px; font-weight: 700;
+  padding: 3px 8px; border-radius: 6px; margin-top: 3px;
+}
+.del-item {
+  margin-left: auto; background: none; border: none;
+  color: #ccc; cursor: pointer; font-size: 18px;
+  transition: color .15s; flex-shrink: 0;
+}
+.del-item:hover { color: var(--red); }
+
+/* ══════════════════════════════════════════
+   USE SUPPLY — stock preview
+══════════════════════════════════════════ */
+.stock-preview { display: flex; gap: 10px; margin-bottom: 18px; }
+.sp-box {
+  flex: 1; background: var(--input-bg);
+  border: 1px solid var(--border); border-radius: var(--radius-sm);
+  padding: 11px 14px;
+}
+.sp-box small { font-size: 11px; color: var(--muted); display: block; }
+.sp-box span  { font-size: 18px; font-weight: 700; color: var(--text); }
+.sp-after span { color: var(--red); }
+
+/* ══════════════════════════════════════════
+   LOADING OVERLAY
+══════════════════════════════════════════ */
+.loading-overlay {
+  position: absolute; inset: 0;
+  background: rgba(237,234,224,.8);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 500; display: none;
+}
+.loading-overlay.show { display: flex; }
+.spinner {
+  width: 36px; height: 36px;
+  border: 3px solid var(--border);
+  border-top-color: var(--green);
+  border-radius: 50%;
+  animation: spin .7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+<div id="app">
+
+<!-- LOADING OVERLAY -->
+<div class="loading-overlay" id="loading">
+  <div class="spinner"></div>
+</div>
+
+<!-- ══════════ LOGIN ══════════ -->
+<div class="screen active" id="s-login">
+  <div class="login-inner">
+    <div class="login-logo">🌱</div>
+    <h1>AgroControl</h1>
+    <p>Ingresa para continuar</p>
+
+    <div class="login-field">
+      <label>Usuario</label>
+      <div class="input-wrap">
+        <span class="ico-l">👤</span>
+        <input type="text" id="inp-user" placeholder="Tu nombre de usuario" autocomplete="off">
+      </div>
+    </div>
+    <div class="login-field" style="margin-bottom:24px;">
+      <label>Contraseña</label>
+      <div class="input-wrap">
+        <span class="ico-l">🔒</span>
+        <input type="password" id="inp-pass" placeholder="••••••">
+      </div>
+    </div>
+    <button class="btn-main btn-green" id="btn-login" onclick="doLogin()">
+      ✓ &nbsp;Iniciar Sesión
+    </button>
+    <button class="btn-main btn-navy" style="margin-top:10px;" onclick="doRegister()">
+      + &nbsp;Crear Cuenta
+    </button>
+  </div>
+</div>
+
+<!-- ══════════ DASHBOARD ══════════ -->
+<div class="screen" id="s-dashboard">
+  <div class="hdr hdr-green">
+    <h1>AgroControl</h1>
+    <p id="dash-bienvenida">Bienvenido</p>
+  </div>
+  <div class="scroll">
+    <p class="section-label">Acciones Rápidas</p>
+    <div class="quick-grid">
+      <div class="quick-card" onclick="go('s-add-gasto')">
+        <div class="q-icon q-red">💸</div>
+        <span>Registrar Gasto</span>
+      </div>
+      <div class="quick-card" onclick="go('s-add-venta')">
+        <div class="q-icon q-green">🛒</div>
+        <span>Registrar Venta</span>
+      </div>
+    </div>
+
+    <p class="section-label">Accesos Principales</p>
+    <div class="access-item" onclick="navTo('s-campos')">
+      <div class="a-icon">📍</div>
+      <div class="a-info">
+        <h3>Mis Campos</h3>
+        <p id="dash-campos">0 campos registrados</p>
+      </div>
+      <span class="chevron">›</span>
+    </div>
+    <div class="access-item" onclick="navTo('s-almacen')">
+      <div class="a-icon">📦</div>
+      <div class="a-info">
+        <h3>Almacén</h3>
+        <p id="dash-insumos">0 insumos en stock</p>
+      </div>
+      <span class="chevron">›</span>
+    </div>
+  </div>
+  <nav class="bottom-nav" id="nav-d">
+    <button class="nav-btn active" onclick="navTo('s-dashboard')"><span class="ico">🏠</span>Inicio</button>
+    <button class="nav-btn" onclick="navTo('s-campos')"><span class="ico">📍</span>Campos</button>
+    <button class="nav-btn" onclick="navTo('s-almacen')"><span class="ico">📦</span>Almacén</button>
+    <button class="nav-btn" onclick="navTo('s-reportes')"><span class="ico">📊</span>Reportes</button>
+    <button class="nav-btn" onclick="navTo('s-mas')"><span class="ico">☰</span>Más</button>
+  </nav>
+</div>
+
+<!-- ══════════ REGISTRAR GASTO ══════════ -->
+<div class="screen" id="s-add-gasto">
+  <div class="hdr hdr-red">
+    <div class="hdr-row">
+      <button class="back-btn" onclick="back()">‹</button>
+      <h1>Registrar Gasto</h1>
+    </div>
+  </div>
+  <div class="scroll">
+    <div class="field">
+      <label>Categoría</label>
+      <select id="g-cat" onchange="onGastoCatChange()">
+        <option value="">Seleccionar...</option>
+        <option>Insumos</option>
+        <option>Mano de obra</option>
+        <option>Transporte</option>
+        <option>Otros gastos</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>Campo / Cultivo</label>
+      <select id="g-campo"><option value="">Seleccionar...</option></select>
+    </div>
+    <div class="field" id="g-insumo-row" style="display:none;">
+      <label>Insumo del Almacén</label>
+      <select id="g-insumo" onchange="onGastoInsumoChange()"><option value="">Seleccionar...</option></select>
+    </div>
+    <div class="field" id="g-cant-row" style="display:none;">
+      <label>Cantidad utilizada</label>
+      <input type="number" id="g-cant" placeholder="0" min="0" oninput="calcGastoMonto()">
+    </div>
+    <div class="field" id="g-desc-row">
+      <label>Descripción</label>
+      <input type="text" id="g-desc" placeholder="Ej: Pago a jornaleros">
+    </div>
+    <div class="field">
+      <label>Monto (S/)</label>
+      <input type="number" id="g-monto" placeholder="0.00" min="0" step="0.01">
+    </div>
+    <div class="field">
+      <label>Fecha</label>
+      <input type="date" id="g-fecha">
+    </div>
+    <div class="field">
+      <label>Nota (opcional)</label>
+      <textarea id="g-nota" placeholder="Agrega una nota adicional"></textarea>
+    </div>
+    <button class="btn-main btn-red" onclick="saveGasto()">💾 &nbsp;Guardar Gasto</button>
+  </div>
+</div>
+
+<!-- ══════════ REGISTRAR VENTA ══════════ -->
+<div class="screen" id="s-add-venta">
+  <div class="hdr hdr-green">
+    <div class="hdr-row">
+      <button class="back-btn" onclick="back()">‹</button>
+      <h1>Registrar Venta</h1>
+    </div>
+  </div>
+  <div class="scroll">
+    <div class="field">
+      <label>Producto</label>
+      <select id="v-prod">
+        <option value="">Seleccionar...</option>
+        <option>Palta</option>
+        <option>Mango</option>
+        <option>Maíz</option>
+        <option>Arroz</option>
+        <option>Papa</option>
+        <option>Espárrago</option>
+        <option>Otros</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>Cantidad (kg)</label>
+      <input type="number" id="v-kg" placeholder="0" min="0" oninput="calcVenta()">
+    </div>
+    <div class="field">
+      <label>Precio por kg (S/)</label>
+      <input type="number" id="v-precio" placeholder="0.00" min="0" step="0.01" oninput="calcVenta()">
+    </div>
+    <div class="total-box">
+      <small>Total de la venta</small>
+      <span id="v-total">S/ 0.00</span>
+    </div>
+    <div class="field">
+      <label>Fecha</label>
+      <input type="date" id="v-fecha">
+    </div>
+    <button class="btn-main btn-green" onclick="saveVenta()">💾 &nbsp;Guardar Venta</button>
+  </div>
+</div>
+
+<!-- ══════════ MIS CAMPOS ══════════ -->
+<div class="screen" id="s-campos">
+  <div class="hdr hdr-green">
+    <div class="hdr-row">
+      <div>
+        <h1>Mis Campos</h1>
+        <p id="campos-sub">0 campos registrados</p>
+      </div>
+      <button class="hdr-plus" onclick="go('s-add-campo')">＋</button>
+    </div>
+  </div>
+  <div class="scroll" id="campos-list">
+    <div class="card empty" id="campos-empty">
+      <div class="empty-ico">📍</div>
+      <p>No hay campos registrados</p>
+      <button class="btn-empty" onclick="go('s-add-campo')">Agregar primer campo</button>
+    </div>
+  </div>
+  <nav class="bottom-nav">
+    <button class="nav-btn" onclick="navTo('s-dashboard')"><span class="ico">🏠</span>Inicio</button>
+    <button class="nav-btn active" onclick="navTo('s-campos')"><span class="ico">📍</span>Campos</button>
+    <button class="nav-btn" onclick="navTo('s-almacen')"><span class="ico">📦</span>Almacén</button>
+    <button class="nav-btn" onclick="navTo('s-reportes')"><span class="ico">📊</span>Reportes</button>
+    <button class="nav-btn" onclick="navTo('s-mas')"><span class="ico">☰</span>Más</button>
+  </nav>
+</div>
+
+<!-- ══════════ AGREGAR CAMPO ══════════ -->
+<div class="screen" id="s-add-campo">
+  <div class="hdr hdr-green">
+    <div class="hdr-row">
+      <button class="back-btn" onclick="back()">‹</button>
+      <h1>Agregar Campo</h1>
+    </div>
+  </div>
+  <div class="scroll">
+    <div class="field">
+      <label>Nombre del Campo</label>
+      <input type="text" id="ac-nombre" placeholder="Ej: Campo Norte">
+    </div>
+    <div class="field">
+      <label>Tipo de Cultivo</label>
+      <select id="ac-cultivo">
+        <option value="">Seleccionar...</option>
+        <option>Palta</option>
+        <option>Mango</option>
+        <option>Maíz</option>
+        <option>Arroz</option>
+        <option>Papa</option>
+        <option>Espárrago</option>
+        <option>Caña de Azúcar</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>Área (hectáreas)</label>
+      <input type="number" id="ac-area" placeholder="0.00" min="0" step="0.01">
+    </div>
+    <div class="field">
+      <label>Ubicación</label>
+      <input type="text" id="ac-ubic" placeholder="Ej: Valle de Nepeña">
+    </div>
+    <button class="btn-main btn-green" onclick="saveCampo()">💾 &nbsp;Guardar Campo</button>
+  </div>
+</div>
+
+<!-- ══════════ ALMACÉN ══════════ -->
+<div class="screen" id="s-almacen">
+  <div class="hdr hdr-green">
+    <div class="hdr-row">
+      <div>
+        <h1>Almacén</h1>
+        <p id="alm-sub">0 insumos registrados</p>
+      </div>
+      <button class="hdr-plus" onclick="go('s-add-insumo')">＋</button>
+    </div>
+  </div>
+  <div class="scroll" id="alm-list">
+    <div class="card empty" id="alm-empty">
+      <div class="empty-ico">📦</div>
+      <p>No hay insumos en el almacén</p>
+      <button class="btn-empty" onclick="go('s-add-insumo')">Agregar primer insumo</button>
+    </div>
+  </div>
+  <nav class="bottom-nav">
+    <button class="nav-btn" onclick="navTo('s-dashboard')"><span class="ico">🏠</span>Inicio</button>
+    <button class="nav-btn" onclick="navTo('s-campos')"><span class="ico">📍</span>Campos</button>
+    <button class="nav-btn active" onclick="navTo('s-almacen')"><span class="ico">📦</span>Almacén</button>
+    <button class="nav-btn" onclick="navTo('s-reportes')"><span class="ico">📊</span>Reportes</button>
+    <button class="nav-btn" onclick="navTo('s-mas')"><span class="ico">☰</span>Más</button>
+  </nav>
+</div>
+
+<!-- ══════════ AGREGAR INSUMO ══════════ -->
+<div class="screen" id="s-add-insumo">
+  <div class="hdr hdr-green">
+    <div class="hdr-row">
+      <button class="back-btn" onclick="back()">‹</button>
+      <h1>Agregar Insumo</h1>
+    </div>
+  </div>
+  <div class="scroll">
+    <div class="field">
+      <label>Nombre del Insumo</label>
+      <input type="text" id="ai-nombre" placeholder="Ej: Fertilizante NPK">
+    </div>
+    <div class="field">
+      <label>Unidad de Medida</label>
+      <select id="ai-unidad">
+        <option value="">Seleccionar...</option>
+        <option>kg</option>
+        <option>litros</option>
+        <option>sacos</option>
+        <option>unidades</option>
+        <option>cajas</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>Cantidad</label>
+      <input type="number" id="ai-cant" placeholder="0" min="0" oninput="calcInsumo()">
+    </div>
+    <div class="field">
+      <label>Costo Unitario (S/)</label>
+      <input type="number" id="ai-costo" placeholder="0.00" min="0" step="0.01" oninput="calcInsumo()">
+    </div>
+    <div class="total-box">
+      <small>Costo Total</small>
+      <span id="ai-total">S/ 0.00</span>
+    </div>
+    <div class="field">
+      <label>Proveedor</label>
+      <input type="text" id="ai-prov" placeholder="Nombre del proveedor">
+    </div>
+    <div class="field">
+      <label>Fecha de Compra</label>
+      <input type="date" id="ai-fecha">
+    </div>
+    <button class="btn-main btn-green" onclick="saveInsumo()">💾 &nbsp;Guardar en Almacén</button>
+  </div>
+</div>
+
+<!-- ══════════ USAR INSUMO ══════════ -->
+<div class="screen" id="s-use-insumo">
+  <div class="hdr hdr-green">
+    <div class="hdr-row">
+      <button class="back-btn" onclick="back()">‹</button>
+      <h1>Registrar Uso de Insumo</h1>
+    </div>
+  </div>
+  <div class="scroll">
+    <div class="field">
+      <label>Campo / Cultivo</label>
+      <select id="ui-campo"><option value="">Seleccionar...</option></select>
+    </div>
+    <div class="field">
+      <label>Insumo</label>
+      <select id="ui-insumo" onchange="onUseInsumoChange()"><option value="">Seleccionar...</option></select>
+    </div>
+    <div class="field">
+      <label>Cantidad a usar</label>
+      <input type="number" id="ui-cant" placeholder="0" min="0" step="0.01" oninput="calcUsePreview()">
+    </div>
+    <div class="stock-preview">
+      <div class="sp-box">
+        <small>Stock actual</small>
+        <span id="ui-stock-now">—</span>
+      </div>
+      <div class="sp-box sp-after">
+        <small>Quedará</small>
+        <span id="ui-stock-after">—</span>
+      </div>
+    </div>
+    <div class="field">
+      <label>Etapa del Cultivo</label>
+      <select id="ui-etapa">
+        <option value="">Seleccionar...</option>
+        <option>Preparación del suelo</option>
+        <option>Siembra</option>
+        <option>Germinación</option>
+        <option>Crecimiento vegetativo</option>
+        <option>Floración</option>
+        <option>Fructificación</option>
+        <option>Cosecha</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>Fecha de Aplicación</label>
+      <input type="date" id="ui-fecha">
+    </div>
+    <button class="btn-main btn-green" onclick="saveUsoInsumo()">💾 &nbsp;Registrar Uso</button>
+  </div>
+</div>
+
+<!-- ══════════ REPORTES AUTH ══════════ -->
+<div class="screen" id="s-reportes">
+  <div class="hdr hdr-green">
+    <h1>Reportes</h1>
+    <p>Acceso Restringido</p>
+  </div>
+  <div class="scroll">
+    <div class="priv-center">
+      <div class="priv-shield">🛡️</div>
+      <h2>Área Privada</h2>
+      <p>Ingresa tu contraseña para ver los reportes financieros</p>
+      <div class="login-field" style="width:100%;margin-top:12px;">
+        <label>Contraseña</label>
+        <div class="input-wrap">
+          <span class="ico-l">🔒</span>
+          <input type="password" id="ra-pass" placeholder="••••••">
+        </div>
+      </div>
+      <button class="btn-main btn-green" style="margin-top:16px;" onclick="verifyReports()">
+        ✓ &nbsp;Verificar Identidad
+      </button>
+      <div class="priv-note">
+        <p>Los reportes contienen información financiera sensible y están protegidos</p>
+      </div>
+    </div>
+  </div>
+  <nav class="bottom-nav">
+    <button class="nav-btn" onclick="navTo('s-dashboard')"><span class="ico">🏠</span>Inicio</button>
+    <button class="nav-btn" onclick="navTo('s-campos')"><span class="ico">📍</span>Campos</button>
+    <button class="nav-btn" onclick="navTo('s-almacen')"><span class="ico">📦</span>Almacén</button>
+    <button class="nav-btn active" onclick="navTo('s-reportes')"><span class="ico">📊</span>Reportes</button>
+    <button class="nav-btn" onclick="navTo('s-mas')"><span class="ico">☰</span>Más</button>
+  </nav>
+</div>
+
+<!-- ══════════ REPORTES DATA ══════════ -->
+<div class="screen" id="s-reportes-data">
+  <div class="hdr hdr-navy">
+    <div class="hdr-row">
+      <div>
+        <h1>Reportes Financieros</h1>
+        <p>Análisis administrativo</p>
+      </div>
+      <button class="hdr-lock" onclick="navTo('s-reportes')" title="Bloquear">🔒</button>
+    </div>
+  </div>
+  <div class="scroll">
+    <div class="stat-card stat-red">
+      <div class="s-ico si-r">📉</div>
+      <div class="stat-info">
+        <small>Gastos Totales</small>
+        <strong id="rep-gastos">S/ 0.00</strong>
+      </div>
+    </div>
+    <div class="stat-card stat-green">
+      <div class="s-ico si-g">📈</div>
+      <div class="stat-info">
+        <small>Ingresos Totales</small>
+        <strong id="rep-ingresos">S/ 0.00</strong>
+      </div>
+    </div>
+    <div class="stat-card stat-blue" id="rep-neta-card">
+      <div class="s-ico si-b" id="rep-neta-ico">💵</div>
+      <div class="stat-info">
+        <small>Ganancia Neta</small>
+        <strong id="rep-neta">S/ 0.00</strong>
+      </div>
+    </div>
+    <div class="chart-wrap">
+      <p class="chart-title">Comparación Visual</p>
+      <div class="bars">
+        <div class="bar-col">
+          <div class="bar-body" id="bar-gastos" style="background:#e24b4a;height:4px;"></div>
+          <span class="bar-lbl">Gastos</span>
+        </div>
+        <div class="bar-col">
+          <div class="bar-body" id="bar-ingresos" style="background:#4a9c5a;height:4px;"></div>
+          <span class="bar-lbl">Ingresos</span>
+        </div>
+      </div>
+      <div class="chart-legend">
+        <div class="leg"><div class="leg-dot" style="background:#e24b4a;"></div>Gastos</div>
+        <div class="leg"><div class="leg-dot" style="background:#4a9c5a;"></div>Ingresos</div>
+      </div>
+    </div>
+    <div class="confidential">🔐 Información financiera confidencial</div>
+  </div>
+  <nav class="bottom-nav">
+    <button class="nav-btn" onclick="navTo('s-dashboard')"><span class="ico">🏠</span>Inicio</button>
+    <button class="nav-btn" onclick="navTo('s-campos')"><span class="ico">📍</span>Campos</button>
+    <button class="nav-btn" onclick="navTo('s-almacen')"><span class="ico">📦</span>Almacén</button>
+    <button class="nav-btn active" onclick="navTo('s-reportes')"><span class="ico">📊</span>Reportes</button>
+    <button class="nav-btn" onclick="navTo('s-mas')"><span class="ico">☰</span>Más</button>
+  </nav>
+</div>
+
+<!-- ══════════ MÁS ══════════ -->
+<div class="screen" id="s-mas">
+  <div class="hdr hdr-green">
+    <h1>Más Opciones</h1>
+    <p>Configuración y ajustes</p>
+  </div>
+  <div class="scroll">
+    <div class="more-item" onclick="go('s-historial')">
+      <div class="m-ico mi-teal">🕐</div>
+      <div>
+        <h3>Historial Completo</h3>
+        <p>Ver todos los movimientos</p>
+      </div>
+    </div>
+    <div class="more-item" onclick="go('s-use-insumo-menu')">
+      <div class="m-ico" style="background:#e6f5ea;color:var(--green);">🌿</div>
+      <div>
+        <h3>Registrar Uso de Insumo</h3>
+        <p>Vincular insumo a un campo</p>
+      </div>
+    </div>
+    <button class="logout-btn" onclick="cerrarSesion()">
+      <div class="logout-ico">🚪</div>
+      <div>
+        <h3>Cerrar Sesión</h3>
+        <p>Salir de la aplicación</p>
+      </div>
+    </button>
+  </div>
+  <nav class="bottom-nav">
+    <button class="nav-btn" onclick="navTo('s-dashboard')"><span class="ico">🏠</span>Inicio</button>
+    <button class="nav-btn" onclick="navTo('s-campos')"><span class="ico">📍</span>Campos</button>
+    <button class="nav-btn" onclick="navTo('s-almacen')"><span class="ico">📦</span>Almacén</button>
+    <button class="nav-btn" onclick="navTo('s-reportes')"><span class="ico">📊</span>Reportes</button>
+    <button class="nav-btn active" onclick="navTo('s-mas')"><span class="ico">☰</span>Más</button>
+  </nav>
+</div>
+
+<!-- ══════════ HISTORIAL ══════════ -->
+<div class="screen" id="s-historial">
+  <div class="hdr hdr-brown">
+    <div class="hdr-row">
+      <button class="back-btn" onclick="back()">‹</button>
+      <h1>Historial</h1>
+    </div>
+  </div>
+  <div class="scroll" id="hist-list">
+    <div class="card" style="padding:20px;text-align:center;" id="hist-empty">
+      <p style="color:var(--muted);font-size:14px;">No hay movimientos registrados</p>
+    </div>
+  </div>
+</div>
+
+<!-- redirect pantalla -->
+<div class="screen" id="s-use-insumo-menu"></div>
+
+<!-- TOAST -->
+<div id="toast"></div>
+
+</div><!-- #app -->
+
+<script>
+// ═══════════════════════════════════════════════
+//  CONFIGURACIÓN — cambiar según tu servidor
+// ═══════════════════════════════════════════════
+const API_BASE = 'http://192.168.1.13:3000/api'; // ← URL del backend
+
+// Token JWT se guarda aquí en memoria (no localStorage para apps nativas)
+let authToken = null;
+let currentUser = null;
+
+// Cache local para evitar llamadas repetidas durante la sesión
+let cache = { campos: null, insumos: null };
+
+// ═══════════════════════════════════════════════
+//  API CLIENT  — todas las llamadas al backend
+// ═══════════════════════════════════════════════
+async function api(method, path, body) {
+  const opts = {
+    method,
+    headers: { 'Content-Type': 'application/json' },
+  };
+  if (authToken) opts.headers['Authorization'] = 'Bearer ' + authToken;
+  if (body)      opts.body = JSON.stringify(body);
+
+  const res = await fetch(API_BASE + path, opts);
+  const data = await res.json().catch(() => ({}));
+
+  if (!res.ok) {
+    throw new Error(data.error || 'Error ' + res.status);
+  }
+  return data;
+}
+
+// ═══════════════════════════════════════════════
+//  LOADING HELPER
+// ═══════════════════════════════════════════════
+function setLoading(on) {
+  document.getElementById('loading').classList.toggle('show', on);
+}
+
+// ═══════════════════════════════════════════════
+//  NAVIGATION
+// ═══════════════════════════════════════════════
+let prevScreen = null;
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function go(id) {
+  prevScreen = document.querySelector('.screen.active')?.id || 's-dashboard';
+  if (id === 's-use-insumo-menu') { id = 's-use-insumo'; prepareUseInsumo(); }
+  if (id === 's-add-gasto')  prepareGastoForm();
+  if (id === 's-add-venta')  prepareVentaForm();
+  showScreen(id);
+}
+
+function navTo(id) {
+  prevScreen = null;
+  showScreen(id);
+  if (id === 's-dashboard') refreshDashboard();
+  if (id === 's-campos')    refreshCampos();
+  if (id === 's-almacen')   refreshAlmacen();
+  if (id === 's-reportes')  { document.getElementById('ra-pass').value = ''; }
+}
+
+function back() {
+  showScreen(prevScreen || 's-dashboard');
+  prevScreen = null;
+}
+
+// ═══════════════════════════════════════════════
+//  AUTH
+// ═══════════════════════════════════════════════
+async function doLogin() {
+  const user = document.getElementById('inp-user').value.trim();
+  const pass = document.getElementById('inp-pass').value.trim();
+  if (!user || !pass) { toast('Completa usuario y contraseña'); return; }
+  setLoading(true);
+  try {
+    const data = await api('POST', '/auth/login', { username: user, password: pass });
+    authToken   = data.token;
+    currentUser = data.user;
+    cache = { campos: null, insumos: null };
+    document.getElementById('dash-bienvenida').textContent = 'Hola, ' + currentUser.username;
+    await refreshDashboard();
+    showScreen('s-dashboard');
+  } catch (e) {
+    toast(e.message || 'Error al iniciar sesión');
+  } finally {
+    setLoading(false);
+  }
+}
+
+async function doRegister() {
+  const user = document.getElementById('inp-user').value.trim();
+  const pass = document.getElementById('inp-pass').value.trim();
+  if (!user || !pass) { toast('Completa usuario y contraseña'); return; }
+  if (pass.length < 4) { toast('La contraseña debe tener al menos 4 caracteres'); return; }
+  setLoading(true);
+  try {
+    const data = await api('POST', '/auth/register', { username: user, password: pass });
+    authToken   = data.token;
+    currentUser = data.user;
+    cache = { campos: null, insumos: null };
+    document.getElementById('dash-bienvenida').textContent = 'Hola, ' + currentUser.username;
+    await refreshDashboard();
+    showScreen('s-dashboard');
+    toast('✓ Cuenta creada');
+  } catch (e) {
+    toast(e.message || 'Error al crear cuenta');
+  } finally {
+    setLoading(false);
+  }
+}
+
+function cerrarSesion() {
+  authToken   = null;
+  currentUser = null;
+  cache       = { campos: null, insumos: null };
+  document.getElementById('inp-user').value = '';
+  document.getElementById('inp-pass').value = '';
+  showScreen('s-login');
+}
+
+async function verifyReports() {
+  const pass = document.getElementById('ra-pass').value.trim();
+  if (!pass) { toast('Ingresa tu contraseña'); return; }
+  setLoading(true);
+  try {
+    // Re-verifica credenciales contra backend
+    await api('POST', '/auth/verify', { password: pass });
+    await refreshReportes();
+    showScreen('s-reportes-data');
+  } catch (e) {
+    toast('Credenciales incorrectas');
+  } finally {
+    setLoading(false);
+  }
+}
+
+// ═══════════════════════════════════════════════
+//  DASHBOARD
+// ═══════════════════════════════════════════════
+async function refreshDashboard() {
+  try {
+    const [campos, insumos] = await Promise.all([
+      api('GET', '/campos'),
+      api('GET', '/insumos'),
+    ]);
+    cache.campos  = campos;
+    cache.insumos = insumos;
+    const nc = campos.length, ni = insumos.length;
+    document.getElementById('dash-campos').textContent  = nc + (nc === 1 ? ' campo registrado' : ' campos registrados');
+    document.getElementById('dash-insumos').textContent = ni + (ni === 1 ? ' insumo en stock' : ' insumos en stock');
+  } catch (e) { toast('Error al cargar datos'); }
+}
+
+// ═══════════════════════════════════════════════
+//  CAMPOS
+// ═══════════════════════════════════════════════
+async function saveCampo() {
+  const nombre  = document.getElementById('ac-nombre').value.trim();
+  const cultivo = document.getElementById('ac-cultivo').value;
+  const area    = parseFloat(document.getElementById('ac-area').value) || 0;
+  const ubic    = document.getElementById('ac-ubic').value.trim();
+  if (!nombre)  { toast('Escribe el nombre del campo'); return; }
+  if (!cultivo) { toast('Selecciona el tipo de cultivo'); return; }
+
+  setLoading(true);
+  try {
+    await api('POST', '/campos', { nombre, cultivo, area, ubic });
+    cache.campos = null;
+    toast('✓ Campo guardado');
+    await refreshCampos();
+    back();
+  } catch (e) { toast(e.message || 'Error al guardar'); }
+  finally { setLoading(false); }
+}
+
+async function refreshCampos() {
+  try {
+    const campos = cache.campos || await api('GET', '/campos');
+    cache.campos = campos;
+    document.getElementById('campos-sub').textContent =
+      campos.length + (campos.length === 1 ? ' campo' : ' campos') + ' registrado' + (campos.length === 1 ? '' : 's');
+
+    const list  = document.getElementById('campos-list');
+    const empty = document.getElementById('campos-empty');
+    list.querySelectorAll('.campo-card').forEach(c => c.remove());
+
+    if (!campos.length) { empty.style.display = ''; return; }
+    empty.style.display = 'none';
+
+    campos.forEach(c => {
+      const div = document.createElement('div');
+      div.className = 'campo-card';
+      div.innerHTML = `
+        <div class="a-icon">📍</div>
+        <div class="a-info" style="flex:1;">
+          <h3>${esc(c.nombre)}</h3>
+          <span class="badge-cultivo">${esc(c.cultivo)}</span>
+          <p style="margin-top:4px;">${c.area} ha · ${esc(c.ubic || 'Sin ubicación')}</p>
+        </div>
+        <button class="del-item" onclick="deleteCampo(${c.id})">🗑</button>
+      `;
+      list.appendChild(div);
+    });
+  } catch (e) { toast('Error al cargar campos'); }
+}
+
+async function deleteCampo(id) {
+  setLoading(true);
+  try {
+    await api('DELETE', '/campos/' + id);
+    cache.campos = null;
+    toast('Campo eliminado');
+    await refreshCampos();
+    await refreshDashboard();
+  } catch (e) { toast(e.message || 'Error al eliminar'); }
+  finally { setLoading(false); }
+}
+
+// ═══════════════════════════════════════════════
+//  ALMACÉN
+// ═══════════════════════════════════════════════
+function calcInsumo() {
+  const q = parseFloat(document.getElementById('ai-cant').value)  || 0;
+  const c = parseFloat(document.getElementById('ai-costo').value) || 0;
+  document.getElementById('ai-total').textContent = 'S/ ' + (q * c).toFixed(2);
+}
+
+async function saveInsumo() {
+  const nombre = document.getElementById('ai-nombre').value.trim();
+  const unidad = document.getElementById('ai-unidad').value;
+  const stock  = parseFloat(document.getElementById('ai-cant').value)  || 0;
+  const costo  = parseFloat(document.getElementById('ai-costo').value) || 0;
+  const prov   = document.getElementById('ai-prov').value.trim();
+  const fecha  = document.getElementById('ai-fecha').value || hoy();
+  if (!nombre) { toast('Escribe el nombre del insumo'); return; }
+  if (!unidad) { toast('Selecciona la unidad de medida'); return; }
+
+  setLoading(true);
+  try {
+    await api('POST', '/insumos', { nombre, unidad, stock, costo, prov, fecha });
+    cache.insumos = null;
+    toast('✓ Insumo guardado');
+    await refreshAlmacen();
+    back();
+  } catch (e) { toast(e.message || 'Error al guardar'); }
+  finally { setLoading(false); }
+}
+
+async function refreshAlmacen() {
+  try {
+    const insumos = await api('GET', '/insumos');
+    cache.insumos = insumos;
+    document.getElementById('alm-sub').textContent =
+      insumos.length + ' insumo' + (insumos.length !== 1 ? 's' : '') + ' registrado' + (insumos.length !== 1 ? 's' : '');
+
+    const list  = document.getElementById('alm-list');
+    const empty = document.getElementById('alm-empty');
+    list.querySelectorAll('.access-item').forEach(i => i.remove());
+
+    if (!insumos.length) { empty.style.display = ''; return; }
+    empty.style.display = 'none';
+
+    insumos.forEach(ins => {
+      const low = ins.stock < 10;
+      const div = document.createElement('div');
+      div.className = 'access-item' + (low ? ' a-stock-low' : '');
+      div.innerHTML = `
+        <div class="a-icon">${low ? '⚠️' : '📦'}</div>
+        <div class="a-info" style="flex:1;">
+          <h3>${esc(ins.nombre)}</h3>
+          <p>${ins.stock} ${esc(ins.unidad)} · S/ ${Number(ins.costo).toFixed(2)} c/u · Total: S/ ${(ins.stock * ins.costo).toFixed(2)}</p>
+        </div>
+        <button class="del-item" onclick="deleteInsumo(${ins.id})">🗑</button>
+      `;
+      list.appendChild(div);
+    });
+  } catch (e) { toast('Error al cargar almacén'); }
+}
+
+async function deleteInsumo(id) {
+  setLoading(true);
+  try {
+    await api('DELETE', '/insumos/' + id);
+    cache.insumos = null;
+    toast('Insumo eliminado');
+    await refreshAlmacen();
+  } catch (e) { toast(e.message || 'Error al eliminar'); }
+  finally { setLoading(false); }
+}
+
+// ═══════════════════════════════════════════════
+//  USO DE INSUMO
+// ═══════════════════════════════════════════════
+async function prepareUseInsumo() {
+  const campos  = cache.campos  || await api('GET', '/campos');
+  const insumos = cache.insumos || await api('GET', '/insumos');
+  cache.campos  = campos;
+  cache.insumos = insumos;
+
+  const campoSel  = document.getElementById('ui-campo');
+  const insumoSel = document.getElementById('ui-insumo');
+  campoSel.innerHTML  = '<option value="">Seleccionar...</option>';
+  insumoSel.innerHTML = '<option value="">Seleccionar...</option>';
+  campos.forEach(c  => campoSel.innerHTML  += `<option value="${c.id}">${esc(c.nombre)}</option>`);
+  insumos.forEach(i => insumoSel.innerHTML += `<option value="${i.id}">${esc(i.nombre)} (${i.stock} ${esc(i.unidad)})</option>`);
+  document.getElementById('ui-cant').value = '';
+  document.getElementById('ui-stock-now').textContent  = '—';
+  document.getElementById('ui-stock-after').textContent= '—';
+  document.getElementById('ui-fecha').value = hoy();
+}
+
+function onUseInsumoChange() {
+  const id  = parseInt(document.getElementById('ui-insumo').value);
+  const ins = (cache.insumos || []).find(i => i.id === id);
+  if (ins) {
+    document.getElementById('ui-stock-now').textContent = ins.stock + ' ' + ins.unidad;
+  } else {
+    document.getElementById('ui-stock-now').textContent  = '—';
+    document.getElementById('ui-stock-after').textContent = '—';
+  }
+  calcUsePreview();
+}
+
+function calcUsePreview() {
+  const id   = parseInt(document.getElementById('ui-insumo').value);
+  const ins  = (cache.insumos || []).find(i => i.id === id);
+  const cant = parseFloat(document.getElementById('ui-cant').value) || 0;
+  if (ins) {
+    const after = ins.stock - cant;
+    document.getElementById('ui-stock-after').textContent = after.toFixed(2) + ' ' + ins.unidad;
+    document.getElementById('ui-stock-after').style.color = after < 0 ? 'var(--red)' : 'var(--text)';
+  }
+}
+
+async function saveUsoInsumo() {
+  const campoId  = parseInt(document.getElementById('ui-campo').value);
+  const insumoId = parseInt(document.getElementById('ui-insumo').value);
+  const cant     = parseFloat(document.getElementById('ui-cant').value) || 0;
+  const etapa    = document.getElementById('ui-etapa').value;
+  const fecha    = document.getElementById('ui-fecha').value || hoy();
+  if (!campoId)  { toast('Selecciona un campo'); return; }
+  if (!insumoId) { toast('Selecciona un insumo'); return; }
+  if (!cant)     { toast('Ingresa la cantidad'); return; }
+  if (!etapa)    { toast('Selecciona la etapa'); return; }
+
+  setLoading(true);
+  try {
+    await api('POST', '/usos', { campoId, insumoId, cant, etapa, fecha });
+    cache.insumos = null;
+    toast('✓ Uso registrado');
+    back();
+  } catch (e) { toast(e.message || 'Error al registrar'); }
+  finally { setLoading(false); }
+}
+
+// ═══════════════════════════════════════════════
+//  GASTOS
+// ═══════════════════════════════════════════════
+async function prepareGastoForm() {
+  const campos  = cache.campos  || await api('GET', '/campos');
+  cache.campos  = campos;
+  const sel = document.getElementById('g-campo');
+  sel.innerHTML = '<option value="">Seleccionar...</option>';
+  campos.forEach(c => sel.innerHTML += `<option value="${c.id}">${esc(c.nombre)}</option>`);
+  document.getElementById('g-fecha').value = hoy();
+  document.getElementById('g-cat').value   = '';
+  document.getElementById('g-insumo-row').style.display = 'none';
+  document.getElementById('g-cant-row').style.display   = 'none';
+  document.getElementById('g-desc-row').style.display   = '';
+}
+
+function onGastoCatChange() {
+  const cat = document.getElementById('g-cat').value;
+  const esInsumo = cat === 'Insumos';
+  document.getElementById('g-insumo-row').style.display = esInsumo ? '' : 'none';
+  document.getElementById('g-cant-row').style.display   = esInsumo ? '' : 'none';
+  document.getElementById('g-desc-row').style.display   = esInsumo ? 'none' : '';
+
+  if (esInsumo) {
+    const sel = document.getElementById('g-insumo');
+    sel.innerHTML = '<option value="">Seleccionar...</option>';
+    (cache.insumos || []).forEach(i => {
+      sel.innerHTML += `<option value="${i.id}">${esc(i.nombre)} (${i.stock} ${esc(i.unidad)})</option>`;
+    });
+  }
+}
+
+function onGastoInsumoChange() { calcGastoMonto(); }
+
+function calcGastoMonto() {
+  const insumoId = parseInt(document.getElementById('g-insumo').value);
+  const cant = parseFloat(document.getElementById('g-cant').value) || 0;
+  const ins = (cache.insumos || []).find(i => i.id === insumoId);
+  if (ins && cant) document.getElementById('g-monto').value = (ins.costo * cant).toFixed(2);
+}
+
+async function saveGasto() {
+  const cat     = document.getElementById('g-cat').value;
+  const campoId = parseInt(document.getElementById('g-campo').value);
+  const monto   = parseFloat(document.getElementById('g-monto').value) || 0;
+  const fecha   = document.getElementById('g-fecha').value || hoy();
+  const nota    = document.getElementById('g-nota').value.trim();
+  if (!cat)    { toast('Selecciona una categoría'); return; }
+  if (!campoId){ toast('Selecciona un campo'); return; }
+  if (!monto)  { toast('Ingresa el monto'); return; }
+
+  let insumoId = null;
+  let desc     = document.getElementById('g-desc').value.trim();
+  let cant     = 0;
+
+  if (cat === 'Insumos') {
+    insumoId = parseInt(document.getElementById('g-insumo').value);
+    cant     = parseFloat(document.getElementById('g-cant').value) || 0;
+    if (!insumoId) { toast('Selecciona un insumo'); return; }
+  }
+
+  setLoading(true);
+  try {
+    await api('POST', '/gastos', { cat, campoId, monto, fecha, nota, desc, insumoId, cant });
+    cache.insumos = null;
+    toast('✓ Gasto guardado');
+    back();
+  } catch (e) { toast(e.message || 'Error al guardar'); }
+  finally { setLoading(false); }
+}
+
+// ═══════════════════════════════════════════════
+//  VENTAS
+// ═══════════════════════════════════════════════
+function calcVenta() {
+  const kg = parseFloat(document.getElementById('v-kg').value)    || 0;
+  const pr = parseFloat(document.getElementById('v-precio').value)|| 0;
+  document.getElementById('v-total').textContent = 'S/ ' + (kg * pr).toFixed(2);
+}
+
+function prepareVentaForm() {
+  document.getElementById('v-fecha').value = hoy();
+  document.getElementById('v-prod').value  = '';
+  document.getElementById('v-kg').value    = '';
+  document.getElementById('v-precio').value= '';
+  document.getElementById('v-total').textContent = 'S/ 0.00';
+}
+
+async function saveVenta() {
+  const prod   = document.getElementById('v-prod').value;
+  const kg     = parseFloat(document.getElementById('v-kg').value)    || 0;
+  const precio = parseFloat(document.getElementById('v-precio').value)|| 0;
+  const fecha  = document.getElementById('v-fecha').value || hoy();
+  if (!prod)  { toast('Selecciona el producto'); return; }
+  if (!kg)    { toast('Ingresa la cantidad'); return; }
+  if (!precio){ toast('Ingresa el precio por kg'); return; }
+
+  setLoading(true);
+  try {
+    await api('POST', '/ventas', { prod, kg, precio, total: kg * precio, fecha });
+    toast('✓ Venta registrada');
+    back();
+  } catch (e) { toast(e.message || 'Error al guardar'); }
+  finally { setLoading(false); }
+}
+
+// ═══════════════════════════════════════════════
+//  REPORTES
+// ═══════════════════════════════════════════════
+async function refreshReportes() {
+  const data = await api('GET', '/reportes');
+  const { gastos, ingresos } = data;
+  const neta = ingresos - gastos;
+
+  document.getElementById('rep-gastos').textContent   = fmt(gastos);
+  document.getElementById('rep-ingresos').textContent = fmt(ingresos);
+  document.getElementById('rep-neta').textContent     = fmt(neta);
+
+  const netaCard = document.getElementById('rep-neta-card');
+  const netaIco  = document.getElementById('rep-neta-ico');
+  if (neta < 0) {
+    netaCard.className = 'stat-card stat-orange';
+    netaIco.className  = 's-ico si-o';
+    netaIco.textContent= '📉';
+  } else {
+    netaCard.className = 'stat-card stat-blue';
+    netaIco.className  = 's-ico si-b';
+    netaIco.textContent= '💵';
+  }
+
+  const max = Math.max(gastos, ingresos, 1);
+  document.getElementById('bar-gastos').style.height   = Math.max(4, Math.round(gastos   / max * 110)) + 'px';
+  document.getElementById('bar-ingresos').style.height = Math.max(4, Math.round(ingresos / max * 110)) + 'px';
+}
+
+// ═══════════════════════════════════════════════
+//  HISTORIAL
+// ═══════════════════════════════════════════════
+async function refreshHistorial() {
+  try {
+    const data = await api('GET', '/historial');
+    const list  = document.getElementById('hist-list');
+    const empty = document.getElementById('hist-empty');
+    list.querySelectorAll('.hist-item').forEach(i => i.remove());
+
+    if (!data.length) { empty.style.display = ''; return; }
+    empty.style.display = 'none';
+
+    data.forEach(m => {
+      const esGasto = m.tipo === 'gasto';
+      const div = document.createElement('div');
+      div.className = 'hist-item';
+      div.innerHTML = `
+        <div class="h-ico ${esGasto ? 'h-ico-r' : 'h-ico-g'}">${esGasto ? '📉' : '📈'}</div>
+        <div class="h-info">
+          <h4>${esc(m.desc)}</h4>
+          <p>${m.campoNombre ? esc(m.campoNombre) + ' · ' : ''}${fmtFecha(m.fecha)}</p>
+        </div>
+        <span class="h-monto ${esGasto ? 'neg' : 'pos'}">${esGasto ? '−' : '+'} ${fmt(m.monto)}</span>
+        <button class="del-btn" onclick="delMovimiento('${m.tipo}',${m.id})">✕</button>
+      `;
+      list.appendChild(div);
+    });
+  } catch (e) { toast('Error al cargar historial'); }
+}
+
+async function delMovimiento(tipo, id) {
+  setLoading(true);
+  try {
+    await api('DELETE', '/' + (tipo === 'gasto' ? 'gastos' : 'ventas') + '/' + id);
+    toast('Registro eliminado');
+    await refreshHistorial();
+  } catch (e) { toast(e.message || 'Error al eliminar'); }
+  finally { setLoading(false); }
+}
+
+// ═══════════════════════════════════════════════
+//  INTERCEPT go() para historial
+// ═══════════════════════════════════════════════
+const _go = go;
+window.go = function(id) {
+  prevScreen = document.querySelector('.screen.active')?.id || 's-dashboard';
+  if (id === 's-historial') { showScreen('s-historial'); refreshHistorial(); return; }
+  _go(id);
+};
+
+// ═══════════════════════════════════════════════
+//  UTILIDADES
+// ═══════════════════════════════════════════════
+function hoy() {
+  return new Date().toISOString().slice(0, 10);
+}
+function fmt(n) {
+  return 'S/ ' + Number(n).toFixed(2);
+}
+function fmtFecha(str) {
+  if (!str) return '';
+  const [y, m, d] = str.split('-');
+  const meses = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+  return `${+d} ${meses[+m - 1]} ${y}`;
+}
+function esc(s) {
+  if (!s) return '';
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+let toastTimer;
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 2400);
+}
+</script>
+</body>
+</html>

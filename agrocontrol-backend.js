@@ -301,6 +301,27 @@ app.post('/api/insumos', authMiddleware, (req, res) => {
   res.status(201).json({ id: result.lastInsertRowid, nombre, unidad, stock: stock || 0, costo: costo || 0, prov: prov || '', fecha: fecha || hoy() });
 });
 
+// PUT /api/insumos/:id — editar insumo (solo dueño)
+app.put('/api/insumos/:id', authMiddleware, (req, res) => {
+  const user = db.prepare('SELECT * FROM users WHERE id = ?').get(req.userId);
+  if (user?.rol !== 'dueno') return res.status(403).json({ error: 'Solo el dueño puede editar insumos' });
+
+  const insumo = db.prepare('SELECT * FROM insumos WHERE id = ? AND user_id = ?').get(req.params.id, req.userId);
+  if (!insumo) return res.status(404).json({ error: 'Insumo no encontrado' });
+
+  const { nombre, unidad, stock, costo, prov, fecha } = req.body;
+  if (!nombre || !unidad) return res.status(400).json({ error: 'Nombre y unidad requeridos' });
+
+  db.prepare(
+    'UPDATE insumos SET nombre = ?, unidad = ?, stock = ?, costo = ?, prov = ?, fecha = ? WHERE id = ?'
+  ).run(nombre, unidad, stock || 0, costo || 0, prov || '', fecha || insumo.fecha, req.params.id);
+
+  res.json({
+    id: Number(req.params.id), nombre, unidad,
+    stock: stock || 0, costo: costo || 0, prov: prov || '', fecha: fecha || insumo.fecha,
+  });
+});
+
 app.delete('/api/insumos/:id', authMiddleware, (req, res) => {
   const user = db.prepare('SELECT * FROM users WHERE id = ?').get(req.userId);
   if (user?.rol !== 'dueno') return res.status(403).json({ error: 'Solo el dueño puede eliminar insumos' });

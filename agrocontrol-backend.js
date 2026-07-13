@@ -515,3 +515,62 @@ app.get('/health', (req, res) => res.json({ status: 'ok' }));
 app.listen(PORT, () => {
   console.log(`🌱 AgroControl corriendo en http://localhost:${PORT}`);
 });
+
+// ── REPORTES AVANZADOS ───────────────────────────────
+
+// GET /api/reportes/avanzados
+app.get('/api/reportes/avanzados', authMiddleware, (req, res) => {
+  const user = db.prepare('SELECT * FROM users WHERE id = ?').get(req.userId);
+  if (user?.rol !== 'dueno') return res.status(403).json({ error: 'Solo el dueño puede ver reportes' });
+
+  // Totales generales
+  const { total_gastos }   = db.prepare('SELECT COALESCE(SUM(monto), 0) as total_gastos FROM gastos WHERE user_id = ?').get(req.userId);
+  const { total_ingresos } = db.prepare('SELECT COALESCE(SUM(total), 0) as total_ingresos FROM ventas WHERE user_id = ?').get(req.userId);
+
+  // Gastos vs Ingresos por mes (últimos 6 meses)
+  const porMes = db.prepare(`
+    SELECT mes, SUM(gastos) as gastos, SUM(ingresos) as ingresos FROM (
+      SELECT strftime('%Y-%m', fecha) as mes, monto as gastos, 0 as ingresos
+      FROM gastos WHERE user_id = ?
+      UNION ALL
+      SELECT strftime('%Y-%m', fecha) as mes, 0 as gastos, total as ingresos
+      FROM ventas WHERE user_id = ?
+    )
+    GROUP BY mes
+    ORDER BY mes DESC
+    LIMIT 6
+  `).all(req.userId, req.userId).reverse();
+
+  // Distribución de gastos por categoría
+  const porCategoria = db.prepare(`
+    SELECT cat, SUM(monto) as total
+    FROM gastos WHERE user_id = ?
+    GROUP BY cat
+    ORDER BY total DESC
+  `).all(req.userId);
+
+  // Insumos más usados
+  const insumosMasUsados = db.prepare(`
+    SELECT insumo_nombre as nombre, SUM(cant) as total_usado, unidad
+    FROM usos WHERE dueno_id = ?
+    GROUP BY insumo_nombre, unidad
+    ORDER BY total_usado DESC
+    LIMIT 5
+  `).all(req.userId);
+
+  // Ventas por producto
+  const ventasPorProducto = db.prepare(`
+    SELECT prod, SUM(total) as total, SUM(kg) as kg_total
+    FROM ventas WHERE user_id = ?
+    GROUP BY prod
+    ORDER BY total DESC
+  `).all(req.userId);
+
+  res.json({
+    totales: { gastos: total_gastos, ingresos: total_ingresos, neta: total_ingresos - total_gastos },
+    porMes,
+    porCategoria,
+    insumosMasUsados,
+    ventasPorProducto,
+  });
+});

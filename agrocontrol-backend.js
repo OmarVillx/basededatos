@@ -293,33 +293,52 @@ app.get('/api/insumos', authMiddleware, (req, res) => {
 app.post('/api/insumos', authMiddleware, (req, res) => {
   const user = db.prepare('SELECT * FROM users WHERE id = ?').get(req.userId);
   if (user?.rol !== 'dueno') return res.status(403).json({ error: 'Solo el dueño puede agregar insumos' });
-  const { nombre, unidad, stock, costo, prov, fecha } = req.body;
+  const { nombre, unidad, stock, costo, prov, fecha, origen } = req.body;
   if (!nombre || !unidad) return res.status(400).json({ error: 'Nombre y unidad requeridos' });
-  const result = db.prepare(
-    'INSERT INTO insumos (user_id, nombre, unidad, stock, costo, prov, fecha) VALUES (?, ?, ?, ?, ?, ?, ?)'
-  ).run(req.userId, nombre, unidad, stock || 0, costo || 0, prov || '', fecha || hoy());
-  res.status(201).json({ id: result.lastInsertRowid, nombre, unidad, stock: stock || 0, costo: costo || 0, prov: prov || '', fecha: fecha || hoy() });
-});
+  if (!['almacen', 'compra'].includes(origen)) return res.status(400).json({ error: 'Indica si lo compraste o ya lo tenías' });
 
-// PUT /api/insumos/:id — editar insumo (solo dueño)
-app.put('/api/insumos/:id', authMiddleware, (req, res) => {
-  const user = db.prepare('SELECT * FROM users WHERE id = ?').get(req.userId);
-  if (user?.rol !== 'dueno') return res.status(403).json({ error: 'Solo el dueño puede editar insumos' });
+  const guardar = db.transaction(() => {
+    // Insertar insumo
+    const result = db.prepare(
+      'INSERT INTO insumos (user_id, nombre, unidad, stock, costo, prov, fecha) VALUES (?, ?, ?, ?, ?, ?, ?)'
+    ).run(req.userId, nombre, unidad, stock || 0, costo || 0, prov || '', fecha || hoy());
 
-  const insumo = db.prepare('SELECT * FROM insumos WHERE id = ? AND user_id = ?').get(req.params.id, req.userId);
-  if (!insumo) return res.status(404).json({ error: 'Insumo no encontrado' });
+    const insumoId = result.lastInsertRowid;
 
-  const { nombre, unidad, stock, costo, prov, fecha } = req.body;
-  if (!nombre || !unidad) return res.status(400).json({ error: 'Nombre y unidad requeridos' });
+    // Si fue compra → generar gasto automático
+    if (origen === 'compra' && stock && costo) {
+      const monto = (parseFloat(stock) * parseFloat(costo));
+      // Buscar primer campo del dueño para asociar el gasto
+      const primerCampo = db.prepare('SELECT * FROM campos WHERE user_id = ? LIMIT 1').get(req.userId);
+      if (primerCampo) {
+        db.prepare(
+          'INSERT INTO gastos (user_id, cat, campo_id, campo_nombre, monto, fecha, nota, desc, insumo_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)'
+        ).run(
+          req.userId,
+          'Insumos',
+          primerCampo.id,
+          primerCampo.nombre,
+          monto,
+          fecha || hoy(),
+          'Compra de insumo registrada automáticamente',
+          `${nombre} x${stock} ${unidad}`,
+          insumoId
+        );
+      }
+    }
 
-  db.prepare(
-    'UPDATE insumos SET nombre = ?, unidad = ?, stock = ?, costo = ?, prov = ?, fecha = ? WHERE id = ?'
-  ).run(nombre, unidad, stock || 0, costo || 0, prov || '', fecha || insumo.fecha, req.params.id);
-
-  res.json({
-    id: Number(req.params.id), nombre, unidad,
-    stock: stock || 0, costo: costo || 0, prov: prov || '', fecha: fecha || insumo.fecha,
+    return insumoId;
   });
+
+  try {
+    const insumoId = guardar();
+    res.status(201).json({
+      id: insumoId, nombre, unidad,
+      stock: stock || 0, costo: costo || 0,
+      prov: prov || '', fecha: fecha || hoy(),
+      gastoGenerado: origen === 'compra',
+    });
+  } catch (e) { res.status(400).json({ error: e.message }); }
 });
 
 app.delete('/api/insumos/:id', authMiddleware, (req, res) => {

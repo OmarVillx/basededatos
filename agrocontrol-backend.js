@@ -13,7 +13,9 @@ const SECRET = process.env.JWT_SECRET || 'agrocontrol_secreto_dev_cambiar_en_pro
 app.use(cors());
 app.use(express.json());
 
-const db = new Database(path.join(__dirname, 'agrocontrol.db'));
+const dbPath = process.env.DB_PATH || path.join(__dirname, 'agrocontrol.db');
+const db = new Database(dbPath);
+
 db.pragma('journal_mode = WAL');
 db.pragma('foreign_keys = ON');
 
